@@ -1,1 +1,1 @@
-web: gunicorn challengeforge.wsgi
+web: gunicorn challengeforge.wsgi --timeout 60
