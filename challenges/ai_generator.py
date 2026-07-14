@@ -69,30 +69,22 @@ def generate_challenge(game, difficulty, players, challenge_type, wishes):
     моделей по очереди (на случай, если одна из них перегружена/не отвечает),
     а при полном провале — мгновенно откатывается на офлайн-генератор, чтобы
     пользователь никогда не ждал долго и не видел ошибку."""
-    if not settings.OPENROUTER_API_KEY:
-        logger.warning(
-            "OPENROUTER_API_KEY не задан — генерация сразу идёт в офлайн-режим."
-        )
-    else:
-        for model in settings.OPENROUTER_MODELS:
-            try:
-                return _generate_with_openrouter(
-                    game,
-                    difficulty,
-                    players,
-                    challenge_type,
-                    wishes,
-                    model=model,
-                )
-            except Exception as exc:
-                # Эта модель не ответила вовремя / вернула не-JSON / упала —
-                # логируем причину (видно в логах Render) и пробуем следующую
-                # модель из списка, не показывая ошибку пользователю.
-                logger.warning("OpenRouter модель %s не сработала: %r", model, exc)
-                continue
-
-    return _fallback_generate(game, difficulty, players, challenge_type, wishes)
-
+    for model in settings.OPENROUTER_MODELS:
+        try:
+            return _generate_with_openrouter(
+                game,
+                difficulty,
+                players,
+                challenge_type,
+                wishes,
+                model=model,
+            )
+        except Exception as exc:
+            # Эта модель не ответила вовремя / вернула не-JSON / упала —
+            # логируем причину (видно в логах Render) и пробуем следующую
+            # модель из списка, не показывая ошибку пользователю.
+            logger.warning("OpenRouter модель %s не сработала: %r", model, exc)
+            continue
 
 
 def _generate_with_openrouter(game, difficulty, players, challenge_type, wishes, model):
