@@ -138,18 +138,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 
-# Закреплённая конкретная бесплатная модель (а не автороутер "openrouter/free",
-# который сам выбирает модель и может попасть на медленную/перегруженную).
-# meta-llama/llama-3.3-70b-instruct:free — стабильная и достаточно быстрая
-# бесплатная модель на OpenRouter, хорошо работает с русским языком и JSON.
-OPENROUTER_MODEL = os.getenv(
-    "OPENROUTER_MODEL",
-    "meta-llama/llama-3.3-70b-instruct:free"
+_default_models = (
+    "meta-llama/llama-3.3-70b-instruct:free,"
+    "qwen/qwen-2.5-72b-instruct:free,"
+    "deepseek/deepseek-chat-v3-0324:free"
 )
+OPENROUTER_MODELS = [
+    m.strip() for m in os.getenv("OPENROUTER_MODELS", _default_models).split(",")
+    if m.strip()
+]
 
-# Сколько секунд максимум ждать ответа от ИИ, прежде чем переключиться
-# на офлайн-генератор (см. challenges/ai_generator.py -> _fallback_generate).
-OPENROUTER_TIMEOUT = float(os.getenv("OPENROUTER_TIMEOUT", "15"))
+# Сколько секунд максимум ждать ответа ОТ ОДНОЙ модели, прежде чем перейти
+# к следующей в списке (а если список исчерпан — переключиться на офлайн-
+# генератор, см. challenges/ai_generator.py -> _fallback_generate).
+OPENROUTER_TIMEOUT = float(os.getenv("OPENROUTER_TIMEOUT", "12"))
 
 SITE_URL = os.getenv(
     "SITE_URL",

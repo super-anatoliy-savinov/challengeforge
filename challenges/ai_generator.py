@@ -63,22 +63,25 @@ TYPE_LABELS = {
 
 
 def generate_challenge(game, difficulty, players, challenge_type, wishes):
-    """Пытается сгенерировать челлендж через ИИ, а при любой проблеме —
-    мгновенно откатывается на офлайн-генератор, чтобы пользователь никогда
-    не ждал и не видел ошибку."""
+    """Пытается сгенерировать челлендж через ИИ, перебирая несколько бесплатных
+    моделей по очереди (на случай, если одна из них перегружена/не отвечает),
+    а при полном провале — мгновенно откатывается на офлайн-генератор, чтобы
+    пользователь никогда не ждал долго и не видел ошибку."""
     if settings.OPENROUTER_API_KEY:
-        try:
-            return _generate_with_openrouter(
-                game,
-                difficulty,
-                players,
-                challenge_type,
-                wishes,
-            )
-        except Exception:
-            # Модель не ответила вовремя / вернула не-JSON / OpenRouter лёг —
-            # не показываем пользователю ошибку, а тихо используем офлайн-генератор.
-            pass
+        for model in settings.OPENROUTER_MODELS:
+            try:
+                return _generate_with_openrouter(
+                    game,
+                    difficulty,
+                    players,
+                    challenge_type,
+                    wishes,
+                    model=model,
+                )
+            except Exception:
+                # Эта модель не ответила вовремя / вернула не-JSON / упала —
+                # пробуем следующую модель из списка, не показывая ошибку пользователю.
+                continue
 
     return _fallback_generate(game, difficulty, players, challenge_type, wishes)
 
