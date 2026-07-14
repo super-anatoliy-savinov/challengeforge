@@ -1,0 +1,1 @@
+web: gunicorn challengeforge.wsgi

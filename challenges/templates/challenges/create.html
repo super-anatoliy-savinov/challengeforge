@@ -1,0 +1,65 @@
+{% extends 'challenges/base.html' %}
+{% load static %}
+
+{% block title %}Создать челлендж — ChallengeForge{% endblock %}
+
+{% block content %}
+<h1 class="form-title">Создать челлендж</h1>
+<p class="form-subtitle">Задай параметры — и кузница выкует испытание специально под тебя.</p>
+
+<form method="post" class="form-card">
+    {% csrf_token %}
+
+    <div class="field-group">
+        <label class="field-label" for="id_game_select">Игра</label>
+        {{ form.game_select }}
+        {% if form.game_select.errors %}<div class="error-text">{{ form.game_select.errors.0 }}</div>{% endif %}
+
+        <div id="id_game_other_wrapper" class="hidden" style="margin-top:14px;">
+            {{ form.game_other }}
+            {% if form.game_other.errors %}<div class="error-text">{{ form.game_other.errors.0 }}</div>{% endif %}
+        </div>
+    </div>
+
+    <div class="field-group">
+        <label class="field-label">Сложность</label>
+        <div class="pill-options">
+            {% for radio in form.difficulty %}
+                {{ radio.tag }}
+                <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="field-group">
+        <label class="field-label">Количество игроков</label>
+        <div class="pill-options">
+            {% for radio in form.players %}
+                {{ radio.tag }}
+                <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="field-group">
+        <label class="field-label">Тип челленджа</label>
+        <div class="pill-options">
+            {% for radio in form.challenge_type %}
+                {{ radio.tag }}
+                <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="field-group">
+        <label class="field-label" for="{{ form.wishes.id_for_label }}">Дополнительные пожелания</label>
+        {{ form.wishes }}
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-block">🔥 Выковать челлендж</button>
+    </div>
+</form>
+
+<script src="{% static 'challenges/js/create.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ChallengeForge{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'challenges/css/style.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="{% url 'home' %}" class="logo">
+                <span class="logo-icon">⚒</span> ChallengeForge
+            </a>
+            <nav class="main-nav">
+                <a href="{% url 'home' %}">Главная</a>
+                <a href="{% url 'create_challenge' %}">Создать</a>
+                <a href="{% url 'challenge_history' %}">История</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container page-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>ChallengeForge — ИИ придумывает испытания, ты их проходишь.</p>
+        </div>
+    </footer>
+</body>
+</html>

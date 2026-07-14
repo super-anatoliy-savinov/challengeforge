@@ -1,0 +1,95 @@
+{% extends 'challenges/base.html' %}
+
+{% block title %}{{ challenge.title }} — ChallengeForge{% endblock %}
+
+{% block content %}
+<div class="result-header">
+    <span class="result-badge">{{ challenge.game }} · {{ challenge.get_difficulty_display }}</span>
+    <h1 class="result-title">{{ challenge.title }}</h1>
+    {% if challenge.short_description %}
+        <p class="result-description">{{ challenge.short_description }}</p>
+    {% endif %}
+</div>
+
+<div class="result-card">
+    <div class="result-stats">
+        <div class="result-stat">
+            <span class="stat-label">Игроки</span>
+            <span class="stat-value">{{ challenge.get_players_display }}</span>
+        </div>
+        <div class="result-stat">
+            <span class="stat-label">Тип</span>
+            <span class="stat-value">{{ challenge.get_challenge_type_display }}</span>
+        </div>
+        <div class="result-stat">
+            <span class="stat-label">Сложность</span>
+            <span class="stat-value">{{ challenge.difficulty_rating }}</span>
+        </div>
+        <div class="result-stat">
+            <span class="stat-label">Время прохождения</span>
+            <span class="stat-value">{{ challenge.estimated_time }}</span>
+        </div>
+    </div>
+
+    {% if challenge.story %}
+    <div class="result-section">
+        <h2><span class="section-icon">📜</span> История</h2>
+        <p>{{ challenge.story }}</p>
+    </div>
+    {% endif %}
+
+    {% if challenge.main_goal %}
+    <div class="result-section">
+        <h2><span class="section-icon">🎯</span> Главная цель</h2>
+        <p>{{ challenge.main_goal }}</p>
+    </div>
+    {% endif %}
+
+    {% if challenge.rules_list %}
+    <div class="result-section">
+        <h2><span class="section-icon">📋</span> Правила</h2>
+        <ul class="result-list rules">
+            {% for rule in challenge.rules_list %}
+                <li>{{ rule }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if challenge.forbidden_list %}
+    <div class="result-section">
+        <h2><span class="section-icon">🚫</span> Запреты</h2>
+        <ul class="result-list forbidden">
+            {% for item in challenge.forbidden_list %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if challenge.win_condition %}
+    <div class="result-section">
+        <h2><span class="section-icon">🏆</span> Условие победы</h2>
+        <p>{{ challenge.win_condition }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<p class="ai-tag">
+    {% if challenge.generated_by_ai %}
+        ✨ Сгенерировано настоящим ИИ (Claude)
+    {% else %}
+        ⚙️ Сгенерировано встроенным офлайн-генератором
+    {% endif %}
+    · {{ challenge.created_at|date:"d.m.Y H:i" }}
+</p>
+
+<div class="result-actions">
+    <a href="{% url 'create_challenge' %}" class="btn btn-primary">Создать новый</a>
+    {% if from_history %}
+        <a href="{% url 'challenge_history' %}" class="btn btn-secondary">Вернуться в историю</a>
+    {% else %}
+        <a href="{% url 'home' %}" class="btn btn-secondary">Вернуться назад</a>
+    {% endif %}
+</div>
+{% endblock %}

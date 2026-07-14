@@ -1,0 +1,34 @@
+{% extends 'challenges/base.html' %}
+
+{% block title %}История челленджей — ChallengeForge{% endblock %}
+
+{% block content %}
+<h1 class="history-title">История челленджей</h1>
+
+{% if is_owner_view %}
+    <p class="history-owner-note">Ты вошёл как создатель сайта — показана история всех посетителей.</p>
+{% else %}
+    <p class="history-owner-note">Показана только твоя собственная история (по этому браузеру).</p>
+{% endif %}
+
+{% if challenges %}
+    <div class="history-grid">
+        {% for c in challenges %}
+            <a href="{% url 'challenge_detail' c.pk %}" class="history-card">
+                <span class="hc-game">{{ c.game }}</span>
+                <h3>{{ c.title }}</h3>
+                <p>{{ c.short_description|truncatewords:18 }}</p>
+                <div class="history-meta">
+                    <span>{{ c.get_difficulty_display }} · {{ c.get_challenge_type_display }}</span>
+                    <span>{{ c.created_at|date:"d.m.Y" }}</span>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <p>Пока ни одного челленджа не создано.</p>
+        <p><a href="{% url 'create_challenge' %}">Создать первый челлендж →</a></p>
+    </div>
+{% endif %}
+{% endblock %}
