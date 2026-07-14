@@ -7,17 +7,16 @@ ai_generator.py
 
 Как это устроено:
 -----------------
-1. Функция обращается к OpenRouter (https://openrouter.ai) — это бесплатный
-   шлюз к разным ИИ-моделям. Используется конкретная закреплённая бесплатная
-   модель (settings.OPENROUTER_MODEL), а не автороутер "openrouter/free",
-   который сам выбирает модель и может попасть на перегруженную/медленную —
-   именно из-за этого раньше генерация иногда долго висела.
-2. У запроса есть жёсткий таймаут (settings.OPENROUTER_TIMEOUT секунд).
-   Если модель не ответила вовремя, вернула не-JSON или произошла любая
-   другая ошибка — используется встроенный офлайн-генератор
+1. Функция по очереди пробует несколько бесплатных моделей на OpenRouter
+   (settings.OPENROUTER_MODELS — список, а не одна модель). Если первая
+   модель перегружена/недоступна — сразу пробуем следующую. Это заметно
+   повышает шанс получить настоящий ИИ-ответ, а не шаблон.
+2. У каждой попытки есть таймаут (settings.OPENROUTER_TIMEOUT секунд).
+   Если ни одна из моделей не ответила вовремя, вернула не-JSON или
+   произошла любая другая ошибка — используется встроенный офлайн-генератор
    _fallback_generate(), который собирает правдоподобный челлендж из
    шаблонов и случайных элементов. Так сайт никогда не "зависает" и всегда
-   быстро отдаёт результат, даже если OpenRouter недоступен.
+   быстро отдаёт результат, даже если весь OpenRouter недоступен.
 
 Чтобы подключить другой ИИ-провайдер позже — правьте только эту функцию,
 остальной код (views.py) её не касается.
@@ -30,10 +29,13 @@ ai_generator.py
 """
 
 import json
+import logging
 import random
 
 from openai import OpenAI
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -67,7 +69,11 @@ def generate_challenge(game, difficulty, players, challenge_type, wishes):
     моделей по очереди (на случай, если одна из них перегружена/не отвечает),
     а при полном провале — мгновенно откатывается на офлайн-генератор, чтобы
     пользователь никогда не ждал долго и не видел ошибку."""
-    if settings.OPENROUTER_API_KEY:
+    if not settings.OPENROUTER_API_KEY:
+        logger.warning(
+            "OPENROUTER_API_KEY не задан — генерация сразу идёт в офлайн-режим."
+        )
+    else:
         for model in settings.OPENROUTER_MODELS:
             try:
                 return _generate_with_openrouter(
@@ -78,16 +84,18 @@ def generate_challenge(game, difficulty, players, challenge_type, wishes):
                     wishes,
                     model=model,
                 )
-            except Exception:
+            except Exception as exc:
                 # Эта модель не ответила вовремя / вернула не-JSON / упала —
-                # пробуем следующую модель из списка, не показывая ошибку пользователю.
+                # логируем причину (видно в логах Render) и пробуем следующую
+                # модель из списка, не показывая ошибку пользователю.
+                logger.warning("OpenRouter модель %s не сработала: %r", model, exc)
                 continue
 
     return _fallback_generate(game, difficulty, players, challenge_type, wishes)
 
 
 
-def _generate_with_openrouter(game, difficulty, players, challenge_type, wishes):
+def _generate_with_openrouter(game, difficulty, players, challenge_type, wishes, model):
     difficulty_ru = DIFFICULTY_LABELS.get(difficulty, difficulty)
     players_ru = PLAYERS_LABELS.get(players, players)
     type_ru = TYPE_LABELS.get(challenge_type, challenge_type)
@@ -207,7 +215,7 @@ def _generate_with_openrouter(game, difficulty, players, challenge_type, wishes)
     )
 
     response = client.chat.completions.create(
-        model=settings.OPENROUTER_MODEL,
+        model=model,
         messages=[
             {
                 "role": "system",
